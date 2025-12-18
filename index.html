@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Risk Sensitive Market Making</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@500;600&family=Lato:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --card: #161b22;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.1);
+      --border: #232936;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Cormorant Garamond", "Times New Roman", serif;
+      background: radial-gradient(circle at 10% 20%, #111827 0, #0d1117 35%, #0d1117 100%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    header {
+      padding: 44px 24px 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 28px 32px;
+    }
+
+    .header-container {
+      padding: 0 28px 12px;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 48px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 2.6rem;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.1rem;
+      max-width: 720px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: var(--accent);
+      color: #0b1020;
+      font-weight: 600;
+      font-family: "Cormorant Garamond", "Times New Roman", serif;
+      font-size: 1rem;
+      letter-spacing: 0.05px;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.35);
+      background: #2563eb;
+      color: #e5e7eb;
+    }
+
+    .button.secondary {
+      background: #0f1624;
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .button.secondary:hover {
+      background: #111a2d;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    section {
+      padding: 12px 0;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.5rem;
+      letter-spacing: -0.3px;
+      font-family: "Cormorant Garamond", "Times New Roman", serif;
+    }
+
+    h3 {
+      font-family: "Cormorant Garamond", "Times New Roman", serif;
+      font-size: 1rem;
+    }
+
+    p {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-family: "Cormorant Garamond", "Times New Roman", serif;
+      font-size: 1.12rem;
+      line-height: 1.35;
+    }
+
+    .subhead {
+      margin: 6px 0 8px;
+      font-size: 1.15rem;
+      color: var(--text);
+      letter-spacing: -0.2px;
+      font-family: "Lato", Arial, sans-serif;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-block {
+      display: grid;
+      gap: 6px;
+    }
+
+    .mini-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin: 6px 0 6px;
+      font-size: 0.98rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .price-pill {
+      padding: 10px 18px;
+      border-radius: 999px;
+      color: #e5e7eb;
+      font-size: 1rem;
+      min-width: 110px;
+      text-align: center;
+      border: 1px solid var(--border);
+      background: #111827;
+    }
+
+    .pill-buy {
+      background: #111827;
+    }
+
+    .pill-mid {
+      background: #1f2937;
+      color: #e5e7eb;
+    }
+
+    .pill-sell {
+      background: #0b3ea1;
+      border-color: #2563eb;
+    }
+
+    .price-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .spread-col {
+      display: grid;
+      grid-template-rows: auto auto auto;
+      align-items: center;
+      gap: 6px;
+      min-width: 160px;
+    }
+
+    .spread-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dotted-line {
+      flex: 1;
+      border-bottom: 2px dotted #9ca3af;
+      opacity: 0.8;
+    }
+
+    .dotted-line.accent {
+      border-color: #3b82f6;
+    }
+
+    .spread-label {
+      text-align: center;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    .spread-label .numeric {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1.2fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .sim-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 22px;
+      align-items: start;
+    }
+
+    .chart-block {
+      display: grid;
+      gap: 8px;
+      position: relative;
+    }
+
+    .chart-row .note {
+      margin-bottom: 0;
+      display: block;
+    }
+
+    .chart-row canvas {
+      display: block;
+      width: 100%;
+      height: 400px;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .legend.inline {
+      position: static;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 6px;
+      margin-bottom: 4px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 6px;
+      border-radius: 4px;
+      background: var(--accent);
+    }
+
+    .control-group {
+      display: grid;
+      gap: 12px;
+      font-size: 1.08rem;
+    }
+
+    label {
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      background: #0f1624;
+      height: 10px;
+      border-radius: 999px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      background: #1f2a3b;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--accent);
+      border: 2px solid #0b1020;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      margin-top: -4px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    input[type="range"]::-moz-range-track {
+      background: #1f2a3b;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      background: var(--accent);
+      border: 2px solid #0b1020;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    .buttons-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .stat {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #0f1624;
+    }
+
+    .stat .label {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .stat .value {
+      font-weight: 700;
+      color: var(--text);
+      font-family: "Inter", Arial, sans-serif;
+      font-size: 0.95rem;
+    }
+
+    canvas {
+      width: 100%;
+      background: #0f1624;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    ul {
+      margin: 8px 0 0 18px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .tagline {
+      padding: 10px 14px;
+      background: var(--accent-soft);
+      border-radius: 10px;
+      color: #1d4ed8;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .note {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    /* ensure the simulation lead-in line matches body sizing */
+    #simulation .note {
+      font-size: 1.08rem;
+    }
+
+    .numeric {
+      font-family: "Inter", Arial, sans-serif;
+    }
+
+    @media (max-width: 900px) {
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+      .sim-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero {
+        padding: 32px;
+      }
+      header {
+        padding-top: 48px;
+      }
+      .button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+  <body>
+  <header>
+    <div class="container header-container">
+      <h1 style="margin: 0 0 4px; font-size: 2.6rem; letter-spacing: -0.5px;">Can an AI Market Maker be Profitable and Safe</h1>
+      <p style="margin: 0 0 6px; color: var(--muted); font-size: 1.12rem;">Explore a simple market simulation which visualizes the concepts of risk and profit in market making and trading. But before that, let's understand some background.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section aria-labelledby="explainer">
+      <h2 id="explainer">What is a Market Maker</h2>
+      <div class="section-block">
+        <p>A market maker is like a shopkeeper for a stock. They continuously posts two prices: one to buy shares and one to sell shares.
+          This makes trading faster and easier for everyone because there is usually someone ready to trade.</p>
+        <p>The small gap between those two prices (the spread) is how they earn money. The main risk is holding too many shares (large inventory), 
+          so market makers constantly balance earning from the spread with keeping their inventory at a safe level.</p>
+        <div class="mini-visual" aria-label="Market maker price sketch">
+          <div class="price-stack">
+            <div class="price-pill pill-buy"><span class="numeric">100.00</span></div>
+            <div class="price-pill pill-mid">Market value</div>
+            <div class="price-pill pill-sell"><span class="numeric">101.00</span></div>
+          </div>
+          <div class="spread-col">
+            <div class="spread-row">
+              <div class="dotted-line"></div>
+              <div style="color: #cbd5e1; font-size: 1.05rem;">Buy Price</div>
+            </div>
+            <div class="spread-label">Spread = <span class="numeric">1</span></div>
+            <div class="spread-row">
+              <div class="dotted-line accent"></div>
+              <div style="color: #cbd5e1; font-size: 1.05rem;">Sell Price</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="mlrl">
+      <h2 id="mlrl">Reinforcement Learning in markets</h2>
+      <div class="section-block">
+        <p><strong>Reinforcement Learning</strong> is a type of <strong>Machine Learning</strong>. <strong>Machine learning (ML)</strong> is a way to teach a computer to make decisions by learning from examples, instead of being told every rule. You show it data, it looks for patterns, 
+          and it uses those patterns to make predictions or choices the next time it sees something similar.</p>
+        <p><strong>Reinforcement Learning (RL)</strong> is where a computer learns by trial and error, like practicing a game. It takes an action, gets feedback for it, and over time develops a strategy.</p>
+        <p> These ML programs are used to trade on the markets and are called trading bots. Most of the trading happening today is done by these bots. So, we can train our trading bots to be risk aware.</p>
+      </div>
+    </section>
+
+    <section id="simulation" aria-labelledby="sim-heading">
+      <h2 id="sim-heading">Simulation</h2>
+      <p> This is a simple market simulation where two different bots trade over time. The goal is to see how their profit and loss (PnL) changes as the market price fluctuates.</p>
+      <p>The two bots: <strong>Greedy bot</strong> Only cares about profit. <strong>Risk aware bot</strong> Is risk aware, balances profit and risk.</p>
+      <p> Use the slider to adjust how risk averse the risk aware bot is. Higher values mean it will trade more cautiously to avoid big losses. You'll also be able to see the PnL of both bots, as well as their inventory</p>
+      <p> Press run to start!</p>
+      <div class="card sim-stack">
+        <div class="chart-row">
+          <div class="chart-block">
+            <div class="note">Price over time</div>
+            <canvas id="price-canvas" width="800" height="400"></canvas>
+          </div>
+          <div class="chart-block">
+            <div class="note">Cumulative PnL</div>
+            <canvas id="pnl-canvas" width="800" height="400"></canvas>
+            <div class="legend inline">
+              <span class="legend-item"><span class="swatch" style="background:#16a34a;"></span>Greedy bot</span>
+              <span class="legend-item"><span class="swatch" style="background:#0ea5e9; border:1px dashed #0ea5e9;"></span>Risk aware bot</span>
+            </div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label for="risk-slider">Risk aversion <span id="risk-value" class="numeric" style="font-size:0.95rem;">0.5</span></label>
+          <input id="risk-slider" type="range" min="0" max="1" value="0.5" step="0.1" />
+          <div class="buttons-row">
+            <button class="button" id="run-btn">Run</button>
+            <button class="button secondary" id="pause-btn">Pause</button>
+            <button class="button secondary" id="reset-btn">Reset</button>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <div class="label">Market Price</div>
+              <div class="value numeric" id="mid-display">100.0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Greedy PnL / Inventory</div>
+              <div class="value numeric" id="greedy-display">0.0 / 0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Risk aware PnL / Inventory</div>
+              <div class="value numeric" id="safe-display">0.0 / 0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="takeaways">
+      <h2 id="takeaways">What this shows</h2>
+      <div class="section-block">
+        <ul>
+          <li><p>Greedy strategies (caring only about profit) can look great early on but can suffer huge losses at times when the market is not stable and 
+            market prices are fluctuating a lot.</p></li>
+          <li><p>Risk aware strategies may trade less and earn a bit slower, yet they avoid the large crashes that wipe out gains.</p></li>
+          <li><p>This risk aware RL bot is based on a foundational model, where it increases its spread: either by buying at a lower price or selling at a higher price. 
+            Doing this allows it to trade less during unstable times, hence holding fewer shares or positions.
+          </p></li>
+          <li><p> There's more advanced RL techniques to make bots even safer, which my research explored. I'll link my research poster and Literature Review in the About section below!</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section aria-labelledby="glossary">
+      <h2 id="glossary">Glossary</h2>
+      <div class="card">
+        <ul>
+          <p><strong>Inventory:</strong> How many units (shares/positions) the bot currently holds. Positive means net long; negative means net short.</p>
+          <p><strong>Long position:</strong> You own the asset and gain when its price rises; losses happen if it falls.</p>
+          <p><strong>Short position:</strong> You owe/borrow the asset and gain when its price falls; losses happen if it rises.</p>
+          <p><strong>PnL:</strong> Profit and Loss. Cash plus the value of inventory according to market prices.</p>
+          <p><strong>Volatility:</strong> How much the price changes over time. Higher volatility means the price changes more and is harder to predict. A fluctuating unstable market is volatile.
+          <p><strong>Mid price:</strong> The number halfway between the best buy price and the best sell price. It is used as a reference price.</p>
+          <p><strong>Bid:</strong> The best price someone is offering to pay to buy.</p>
+          <p><strong>Ask:</strong> The best price someone is offering to accept to sell.</p>
+          <p><strong>Spread:</strong> The difference between the bid and the ask.</p>
+          <p><strong>Order:</strong> A request to buy or sell a certain amount at a certain price.</p>
+          <p><strong>Drawdown:</strong> How much PnL drops from its highest point to a later low point.</p>
+          <p><strong>Risk level (or caution level):</strong> How much the bot avoids big losses or large inventory. Higher caution usually trades less.</p>
+          <p><strong>Inventory risk:</strong> The risk of losing money because the bot is holding or owing a lot when the price changes.</p>
+                  </ul>
+      </div>
+    </section>
+
+    <section aria-labelledby="about">
+      <h2 id="about">About</h2>
+      <div class="section-block">
+        <p>This project is based on my undergraduate research at Purdue University on risk sensitive reinforcement learning for market making.</p>
+        <p>
+          References: <a href="file:///Users/sarrahzojwalla/Desktop/engl%20304/Zojwalla_Bibliography.pdf"> View</a> · Literature Review: <a href="file:///Users/sarrahzojwalla/Desktop/engl%20304/Zojwalla_LiteratureReview.pdf">Download PDF</a> · Poster: <a href="file:///Users/sarrahzojwalla/Desktop/engl%20304/Zojwalla_ResearchPoster.pptx.pdf">View</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --------- Simulation state ---------
+    const riskSlider = document.getElementById("risk-slider");
+    const riskValue = document.getElementById("risk-value");
+    const runBtn = document.getElementById("run-btn");
+    const pauseBtn = document.getElementById("pause-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const midDisplay = document.getElementById("mid-display");
+    const greedyDisplay = document.getElementById("greedy-display");
+    const safeDisplay = document.getElementById("safe-display");
+    const priceCanvas = document.getElementById("price-canvas");
+    const pnlCanvas = document.getElementById("pnl-canvas");
+    const priceCtx = priceCanvas.getContext("2d");
+    const pnlCtx = pnlCanvas.getContext("2d");
+
+    const totalSteps = 200;
+    const stepDelay = 40; // ms between steps, ~8 seconds per run
+
+    let loopHandle = null;
+    let lastTick = null;
+    let currentStep = 0;
+    let running = false;
+
+    let prices = [];
+    let pnlGreedy = [];
+    let pnlSafe = [];
+
+    const state = {
+      midPrice: 100,
+      inventoryGreedy: 0,
+      cashGreedy: 0,
+      inventorySafe: 0,
+      cashSafe: 0,
+      volatility: 0.5,
+      riskAversion: parseFloat(riskSlider.value),
+    };
+
+    // --------- Price generation ---------
+    function nextPrice() {
+      const rand = Math.random() - 0.5; // roughly normal-ish
+      const shock = rand * 1.2; // small step
+      state.volatility = 0.9 * state.volatility + 0.1 * Math.abs(shock); // smooth vol estimate
+      state.midPrice = Math.max(1, state.midPrice + shock);
+      return state.midPrice;
+    }
+
+    // --------- Bot decision logic ---------
+    function getSpreads() {
+      const greedySpread = 1.0; // tight
+      const baseSafe = 1.2;
+      const invPenalty = Math.min(1.5, Math.abs(state.inventorySafe) * 0.12 * state.riskAversion);
+      const volPenalty = Math.min(1.2, state.volatility * state.riskAversion * 0.8);
+      const safeSpread = baseSafe + invPenalty + volPenalty;
+      return { greedySpread, safeSpread };
+    }
+
+    // --------- Single simulation step ---------
+    function simulateStep() {
+      const mid = nextPrice();
+      const { greedySpread, safeSpread } = getSpreads();
+
+      // simple fill probabilities inversely related to spread tightness
+      const greedyFillProb = Math.min(0.9, 0.65 - greedySpread * 0.05 + Math.random() * 0.1);
+      const safeFillProb = Math.min(0.8, 0.55 - safeSpread * 0.04 + Math.random() * 0.1);
+
+      tradeBot("greedy", greedySpread, greedyFillProb, mid);
+      tradeBot("safe", safeSpread, safeFillProb, mid);
+
+      // mark-to-market PnL
+      const greedyPnl = state.cashGreedy + state.inventoryGreedy * mid;
+      const safePnl = state.cashSafe + state.inventorySafe * mid;
+
+      prices.push(mid);
+      pnlGreedy.push(greedyPnl);
+      pnlSafe.push(safePnl);
+      currentStep++;
+      drawPriceChart();
+      drawPnlChart();
+      updateStats(greedyPnl, safePnl);
+
+      if (currentStep >= totalSteps) {
+        stopLoop();
+      }
+    }
+
+    function tradeBot(type, spread, fillProb, mid) {
+      const half = spread / 2;
+      const bid = mid - half;
+      const ask = mid + half;
+      const hit = Math.random();
+
+      if (hit < fillProb / 2) {
+        // buy at bid
+        if (type === "greedy") {
+          state.inventoryGreedy += 1;
+          state.cashGreedy -= bid;
+        } else {
+          state.inventorySafe += 1;
+          state.cashSafe -= bid;
+        }
+      } else if (hit < fillProb) {
+        // sell at ask
+        if (type === "greedy") {
+          state.inventoryGreedy -= 1;
+          state.cashGreedy += ask;
+        } else {
+          state.inventorySafe -= 1;
+          state.cashSafe += ask;
+        }
+      }
+    }
+
+    // --------- Chart drawing ---------
+    function clearCanvas(ctx, canvas) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#0f1624";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#2a3344";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(50, 10);
+      ctx.lineTo(50, canvas.height - 30);
+      ctx.lineTo(canvas.width - 10, canvas.height - 30);
+      ctx.stroke();
+    }
+
+    function drawAxes(ctx, canvas, min, max, pointsCount, yLabel, xLabel) {
+      const w = canvas.width;
+      const h = canvas.height;
+      const left = 50;
+      const bottom = h - 30;
+      const top = 10;
+      const right = w - 10;
+      ctx.save();
+      ctx.fillStyle = "#9ca3af";
+      ctx.strokeStyle = "#2a3344";
+      ctx.lineWidth = 1;
+      ctx.font = "11px Inter, Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
+      const yTicks = 3;
+      for (let i = 0; i <= yTicks; i++) {
+        const t = i / yTicks;
+        const y = bottom - t * (bottom - top);
+        const val = min + (max - min) * t;
+        ctx.fillText(val.toFixed(2), left - 6, y);
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+      }
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      const xTicks = 4;
+      const total = Math.max(pointsCount - 1, 1);
+      for (let i = 0; i <= xTicks; i++) {
+        const t = i / xTicks;
+        const x = left + t * (right - left);
+        const stepVal = Math.round(t * total);
+        ctx.fillText(stepVal.toString(), x, bottom + 6);
+      }
+
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(yLabel, left + 6, top + 2);
+
+      if (xLabel) {
+        ctx.textAlign = "right";
+        ctx.textBaseline = "bottom";
+        ctx.fillText(xLabel, right, h - 2);
+      }
+      ctx.restore();
+    }
+
+    function drawLine(ctx, data, color, dash = [], minOverride, maxOverride) {
+      if (!data.length) return;
+      const c = ctx.canvas;
+      const w = c.width - 70;
+      const h = c.height - 50;
+      const min = minOverride !== undefined ? minOverride : Math.min(...data);
+      const max = maxOverride !== undefined ? maxOverride : Math.max(...data);
+      const range = max - min || 1;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash(dash);
+      ctx.beginPath();
+      data.forEach((v, i) => {
+        const x = 50 + (i / Math.max(data.length - 1, 1)) * w;
+        const y = c.height - 30 - ((v - min) / range) * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawPriceChart() {
+      clearCanvas(priceCtx, priceCanvas);
+      const min = prices.length ? Math.min(...prices) : 0;
+      const max = prices.length ? Math.max(...prices) : 1;
+      drawAxes(priceCtx, priceCanvas, min, max, prices.length, "Price", "Time Steps");
+      drawLine(priceCtx, prices, "#2563eb", [], min, max);
+    }
+
+    function drawPnlChart() {
+      clearCanvas(pnlCtx, pnlCanvas);
+      const combined = pnlGreedy.concat(pnlSafe);
+      const min = combined.length ? Math.min(...combined) : 0;
+      const max = combined.length ? Math.max(...combined) : 1;
+      drawAxes(pnlCtx, pnlCanvas, min, max, pnlGreedy.length, "PnL", "Time Steps");
+      drawLine(pnlCtx, pnlGreedy, "#16a34a", [], min, max); // green solid
+      drawLine(pnlCtx, pnlSafe, "#0ea5e9", [6, 6], min, max); // blue dashed
+    }
+
+    // --------- Simulation loop control ---------
+    // drives the animation, stepping forward based on elapsed time
+    function stepLoop(timestamp) {
+      if (!running) return;
+      if (!lastTick) lastTick = timestamp;
+      const elapsed = timestamp - lastTick;
+      if (elapsed >= stepDelay) {
+        simulateStep();
+        lastTick = timestamp;
+      }
+      loopHandle = requestAnimationFrame(stepLoop);
+    }
+
+    function startLoop() {
+      stopLoop();
+      running = true;
+      pauseBtn.textContent = "Pause";
+      lastTick = null;
+      loopHandle = requestAnimationFrame(stepLoop);
+    }
+
+    function stopLoop() {
+      running = false;
+      if (loopHandle) cancelAnimationFrame(loopHandle);
+      loopHandle = null;
+    }
+
+    function updateStats(greedyPnl, safePnl) {
+      midDisplay.textContent = state.midPrice.toFixed(2);
+      greedyDisplay.textContent = `${greedyPnl.toFixed(2)} / ${state.inventoryGreedy}`;
+      safeDisplay.textContent = `${safePnl.toFixed(2)} / ${state.inventorySafe}`;
+    }
+
+    function resetSimulation() {
+      stopLoop();
+      currentStep = 0;
+      prices = [];
+      pnlGreedy = [];
+      pnlSafe = [];
+      state.midPrice = 100;
+      state.inventoryGreedy = 0;
+      state.inventorySafe = 0;
+      state.cashGreedy = 0;
+      state.cashSafe = 0;
+      state.volatility = 0.5;
+      drawPriceChart();
+      drawPnlChart();
+      updateStats(0, 0);
+    }
+
+    // --------- UI bindings ---------
+    riskSlider.addEventListener("input", () => {
+      const val = parseFloat(riskSlider.value);
+      state.riskAversion = val;
+      riskValue.textContent = val.toFixed(1);
+    });
+
+    runBtn.addEventListener("click", () => {
+      resetSimulation();
+      startLoop();
+    });
+
+    pauseBtn.addEventListener("click", () => {
+      if (running) {
+        stopLoop();
+        pauseBtn.textContent = "Resume";
+      } else {
+        startLoop();
+        pauseBtn.textContent = "Pause";
+      }
+    });
+
+    resetBtn.addEventListener("click", () => {
+      pauseBtn.textContent = "Pause";
+      resetSimulation();
+    });
+
+    // initial paint
+    resetSimulation();
+  </script>
+</body>
+</html>
